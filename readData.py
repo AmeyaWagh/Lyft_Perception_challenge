@@ -64,7 +64,18 @@ class_names = ['BG', 'person', 'bicycle', 'car', 'motorcycle', 'airplane',
 
 
 file_names = next(os.walk(IMAGE_DIR))[2]
-image = skimage.io.imread(os.path.join(IMAGE_DIR, random.choice(file_names)))
+print(">>",file_names)
+
+DATASET_DIR = "./Train"
+
+RGB_DIR = os.path.join(DATASET_DIR,'CameraRGB')
+MASK_DIR = os.path.join(DATASET_DIR,'CameraSeg')
+
+# files = os.listdir(RGB_DIR)
+
+
+# image = skimage.io.imread(os.path.join(IMAGE_DIR, random.choice(file_names)))
+image = skimage.io.imread(os.path.join(RGB_DIR, "51.png"))
 
 # Run detection
 results = model.detect([image], verbose=1)
@@ -75,10 +86,5 @@ visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'],
                             class_names, r['scores'])
 
 
-# DATASET_DIR = "./Train"
 
-# RGB_DIR = os.path.join(DATASET_DIR,'CameraRGB')
-# MASK_DIR = os.path.join(DATASET_DIR,'CameraSeg')
-
-# files = os.listdir(RGB_DIR)
 

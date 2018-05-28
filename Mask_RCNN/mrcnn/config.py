@@ -50,7 +50,8 @@ class Config(object):
 
     # Backbone network architecture
     # Supported values are: resnet50, resnet101
-    BACKBONE = "resnet101"
+    # BACKBONE = "resnet101"
+    BACKBONE = "resnet50"
 
     # The strides of each layer of the FPN Pyramid. These values
     # are based on a Resnet101 backbone.
