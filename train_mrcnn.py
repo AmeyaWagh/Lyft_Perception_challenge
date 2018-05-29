@@ -86,9 +86,11 @@ class lyftDataset(utils.Dataset):
         self.add_class("shapes", 2, "car")
 
         if dataset_type=='train':
-            images = images[:3]
+            images = images[:800]
+        elif dataset_type=='val':
+            images = images[800:900]
         else:
-            images = images[3:4]
+            images = images[900:]
 
         for _image in images:
             # image = skimage.io.imread(os.path.join(image_paths,_image))
@@ -123,7 +125,7 @@ class lyftDataset(utils.Dataset):
             return super(self.__class__, self).load_mask(image_id)
         info = self.image_info[image_id]
         # mask_label = skimage.io.imread(os.path.join(os.path.dirname(info["path"]),"../CameraSeg",info["id"])).astype(np.bool)
-        mask_label = skimage.io.imread(os.path.join("./TrainDummy/CameraSeg",info["id"]))
+        mask_label = skimage.io.imread(os.path.join("./Train/CameraSeg",info["id"]))
         # mask_label = cv2.resize(mask_label, dsize=(256,256), interpolation=cv2.INTER_CUBIC)
         # print("[mask]",os.path.join("./TrainDummy/CameraSeg",info["id"]))
 
@@ -310,15 +312,19 @@ class lyftDataset(utils.Dataset):
 #     mask, class_ids = dataset_train.load_mask(image_id)
 #     visualize.display_top_masks(image, mask, class_ids, dataset_train.class_names)
 
-RGB_PATH = 'TrainDummy/'
+RGB_PATH = 'Train/'
 
 dataset_train = lyftDataset()
 dataset_train.load_images(RGB_PATH,dataset_type='train')
 dataset_train.prepare()
 
 dataset_val = lyftDataset()
-dataset_val.load_images(RGB_PATH,dataset_type='test')
+dataset_val.load_images(RGB_PATH,dataset_type='val')
 dataset_val.prepare()
+
+dataset_test = lyftDataset()
+dataset_test.load_images(RGB_PATH,dataset_type='test')
+dataset_test.prepare()
 
 model = modellib.MaskRCNN(mode="training", config=config,
                           model_dir=MODEL_DIR)
@@ -367,7 +373,7 @@ model.load_weights(model_path, by_name=True)
 
 
 # # Test on a random image
-image_id = random.choice(dataset_val.image_ids)
+image_id = random.choice(dataset_test.image_ids)
 original_image, image_meta, gt_class_id, gt_bbox, gt_mask =\
     modellib.load_image_gt(dataset_val, inference_config, 
                            image_id, use_mini_mask=False)
