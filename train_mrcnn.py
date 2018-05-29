@@ -9,6 +9,7 @@ import cv2
 import matplotlib
 import matplotlib.pyplot as plt
 import skimage.io
+from imgaug import augmenters as iaa
 
 ROOT_DIR = os.path.abspath("./")
 
@@ -178,6 +179,18 @@ dataset_val.prepare()
 # dataset_test = lyftDataset()
 # dataset_test.load_images(RGB_PATH,dataset_type='test')
 # dataset_test.prepare()
+augmentation = iaa.SomeOf((0, 2), [
+        iaa.Fliplr(0.5),
+        iaa.Flipud(0.5),
+        iaa.OneOf([iaa.Affine(rotate=90),
+                   iaa.Affine(rotate=180),
+                   iaa.Affine(rotate=270)]),
+        iaa.Multiply((0.8, 1.5)),
+        iaa.GaussianBlur(sigma=(0.0, 5.0))
+    ])
+
+
+
 
 model = modellib.MaskRCNN(mode="training", config=config,
                           model_dir=MODEL_DIR)
@@ -186,18 +199,23 @@ model.load_weights(COCO_MODEL_PATH, by_name=True,
                        exclude=["mrcnn_class_logits", "mrcnn_bbox_fc", 
                                 "mrcnn_bbox", "mrcnn_mask"])
 
-# model.train(dataset_train, dataset_val, 
-#             learning_rate=config.LEARNING_RATE, 
-#             epochs=2, 
-#             layers='heads')
 
-# model.train(dataset_train, dataset_val, 
-#             learning_rate=config.LEARNING_RATE / 10,
-#             epochs=2, 
-#             layers="all")
 
-# model_path = os.path.join(ROOT_DIR, "mask_rcnn_lyft.h5")
-# model.keras_model.save_weights(model_path)
+
+model.train(dataset_train, dataset_val, 
+            learning_rate=config.LEARNING_RATE, 
+            epochs=20,
+            augmentation=augmentation, 
+            layers='heads')
+
+model.train(dataset_train, dataset_val, 
+            learning_rate=config.LEARNING_RATE / 10,
+            epochs=40,
+            augmentation=augmentation, 
+            layers="all")
+
+model_path = os.path.join(ROOT_DIR, "mask_rcnn_lyft.h5")
+model.keras_model.save_weights(model_path)
 
 
 
