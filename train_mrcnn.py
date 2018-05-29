@@ -48,7 +48,7 @@ class ShapesConfig(Config):
     IMAGES_PER_GPU = 1
 
     # Number of classes (including background)
-    NUM_CLASSES = 1 + 1  # background + 3 shapes
+    NUM_CLASSES = 1 + 2  # background + 3 shapes
 
     # Use small images for faster training. Set the limits of the small side
     # the large side, and that determines the image shape.
@@ -82,8 +82,8 @@ class lyftDataset(utils.Dataset):
         image_paths = os.path.join(dataset_dir,'CameraRGB')
         images = os.listdir(image_paths)
 
-        # self.add_class("shapes", 10, "car")
         self.add_class("shapes", 1, "road")
+        self.add_class("shapes", 2, "car")
 
         if dataset_type=='train':
             images = images[:3]
@@ -115,7 +115,7 @@ class lyftDataset(utils.Dataset):
         return image
 
     def load_mask(self,image_id):
-        print(self.random_idx)
+        # print(self.random_idx)
         self.random_idx+=1
         image_info = self.image_info[image_id]
         if image_info["source"] != "shapes":
@@ -123,48 +123,39 @@ class lyftDataset(utils.Dataset):
             return super(self.__class__, self).load_mask(image_id)
         info = self.image_info[image_id]
         # mask_label = skimage.io.imread(os.path.join(os.path.dirname(info["path"]),"../CameraSeg",info["id"])).astype(np.bool)
-        mask_label = skimage.io.imread(os.path.join("./TrainDummy/CameraSeg",info["id"])).astype(np.bool)
+        mask_label = skimage.io.imread(os.path.join("./TrainDummy/CameraSeg",info["id"]))
         # mask_label = cv2.resize(mask_label, dsize=(256,256), interpolation=cv2.INTER_CUBIC)
-        print("[mask]",os.path.join("./TrainDummy/CameraSeg",info["id"]))
+        # print("[mask]",os.path.join("./TrainDummy/CameraSeg",info["id"]))
 
         # return self.process_labels(mask_label),np.array([7,10]).astype(np.int32)
         # return self.process_labels(mask_label),np.array([1]).astype(np.int32)
-        print("bf-->",np.sum(mask_label[:,:,0], axis=(0, 1)) > 0)
+        # print("bf-->",np.sum(mask_label[:,:,0], axis=(0, 1)) > 0)
         mask = self.process_labels(mask_label[:,:,0])
-        print("shape",mask.shape)
-        print("bf--<",np.sum(mask, axis=(0, 1)) > 0)
-        return mask,np.ones([mask.shape[-1]], dtype=np.int32)
+        # print("shape",mask.shape)
+        # print("bf--<",np.sum(mask, axis=(0, 1)) > 0)
+        # return mask,np.ones([mask.shape[-1]], dtype=np.int32)
+        return mask,np.array([1,2], dtype=np.int32)
 
     def process_labels(self,labels):
-        # car_pixels = (labels == [10,0,0]).nonzero()
-        # hood_idx = (car_pixels[0] >= 500).nonzero()[0]
-        # hood_pixels = (car_pixels[0][hood_idx], \
-        #                car_pixels[1][hood_idx])
-
-        # labels[hood_pixels] = 0
-        # car_mask = labels==[10,0,0]
-
-        # lane_marking_pixels = (labels == [6,0,0]).nonzero()
-        # labels[lane_marking_pixels] = 7
-
-        # road_mask = labels==[7,0,0]
-
-        # # mask_indx = car_mask | road_mask 
-
-        # final_car = np.multiply(labels[:,:,0],car_mask[:,:,2])
-        # final_road = np.multiply(labels[:,:,1],road_mask[:,:,2])
-        # # _buffer=np.zeros_like(labels)[:,:,2]
-        # # return np.multiply(labels,mask_indx)
-        # # return np.dstack([final_road,final_car])
-        # return np.dstack([final_road])
-        # return final_road
         
-        # lane_marking_pixels = (labels == 6).nonzero()
-        # labels[lane_marking_pixels] = 7
+        # labels_new = np.copy(labels)
+        labels_new = np.zeros(labels.shape)
+        labels_new_car = np.zeros(labels.shape)
+        
+        lane_marking_pixels_1 = (labels == 6).nonzero()
+        lane_marking_pixels_2 = (labels == 7).nonzero()
+        lane_marking_pixels_car = (labels == 10).nonzero()
 
-        # road_mask = labels==7
-        # return np.dstack([road_mask*1])
-        return np.dstack([labels])
+        labels_new[lane_marking_pixels_1] = 1
+
+        labels_new[lane_marking_pixels_2] = 1
+
+        labels_new_car[lane_marking_pixels_car] = 1
+
+        # print(labels_new)
+        
+        return np.dstack([labels_new,labels_new_car])
+
 
     def image_reference(self, image_id):
         """Return the shapes data of the image."""
@@ -341,10 +332,10 @@ model.train(dataset_train, dataset_val,
             epochs=1, 
             layers='heads')
 
-# model.train(dataset_train, dataset_val, 
-#             learning_rate=config.LEARNING_RATE / 10,
-#             epochs=2, 
-#             layers="all")
+model.train(dataset_train, dataset_val, 
+            learning_rate=config.LEARNING_RATE / 10,
+            epochs=2, 
+            layers="all")
 
 model_path = os.path.join(ROOT_DIR, "mask_rcnn_lyft.h5")
 model.keras_model.save_weights(model_path)
@@ -353,39 +344,39 @@ model.keras_model.save_weights(model_path)
 
 # inference
 
-# class InferenceConfig(ShapesConfig):
-#     GPU_COUNT = 1
-#     IMAGES_PER_GPU = 1
+class InferenceConfig(ShapesConfig):
+    GPU_COUNT = 1
+    IMAGES_PER_GPU = 1
 
-# inference_config = InferenceConfig()
+inference_config = InferenceConfig()
 
-# # Recreate the model in inference mode
-# model = modellib.MaskRCNN(mode="inference", 
-#                           config=inference_config,
-#                           model_dir=MODEL_DIR)
+# Recreate the model in inference mode
+model = modellib.MaskRCNN(mode="inference", 
+                          config=inference_config,
+                          model_dir=MODEL_DIR)
 
-# # Get path to saved weights
-# # Either set a specific path or find last trained weights
-# # model_path = os.path.join(ROOT_DIR, ".h5 file name here")
-# model_path = model.find_last()[1]
+# Get path to saved weights
+# Either set a specific path or find last trained weights
+# model_path = os.path.join(ROOT_DIR, ".h5 file name here")
+model_path = model.find_last()[1]
 
-# # Load trained weights (fill in path to trained weights here)
-# assert model_path != "", "Provide path to trained weights"
-# print("Loading weights from ", model_path)
-# model.load_weights(model_path, by_name=True)
+# Load trained weights (fill in path to trained weights here)
+assert model_path != "", "Provide path to trained weights"
+print("Loading weights from ", model_path)
+model.load_weights(model_path, by_name=True)
 
 
 # # Test on a random image
-# image_id = random.choice(dataset_val.image_ids)
-# original_image, image_meta, gt_class_id, gt_bbox, gt_mask =\
-#     modellib.load_image_gt(dataset_val, inference_config, 
-#                            image_id, use_mini_mask=False)
+image_id = random.choice(dataset_val.image_ids)
+original_image, image_meta, gt_class_id, gt_bbox, gt_mask =\
+    modellib.load_image_gt(dataset_val, inference_config, 
+                           image_id, use_mini_mask=False)
 
-# log("original_image", original_image)
-# log("image_meta", image_meta)
-# log("gt_class_id", gt_class_id)
-# log("gt_bbox", gt_bbox)
-# log("gt_mask", gt_mask)
+log("original_image", original_image)
+log("image_meta", image_meta)
+log("gt_class_id", gt_class_id)
+log("gt_bbox", gt_bbox)
+log("gt_mask", gt_mask)
 
-# visualize.display_instances(original_image, gt_bbox, gt_mask, gt_class_id, 
-#                             dataset_train.class_names, figsize=(8, 8))
+visualize.display_instances(original_image, gt_bbox, gt_mask, gt_class_id, 
+                            dataset_train.class_names, figsize=(8, 8))

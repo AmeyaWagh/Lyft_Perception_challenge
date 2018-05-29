@@ -1215,7 +1215,9 @@ def load_image_gt(dataset, config, image_id, augment=False, augmentation=None,
         min_scale=config.IMAGE_MIN_SCALE,
         max_dim=config.IMAGE_MAX_DIM,
         mode=config.IMAGE_RESIZE_MODE)
+    # print("bf",np.sum(mask, axis=(0, 1)) > 0)
     mask = utils.resize_mask(mask, scale, padding, crop)
+    # print("af",np.sum(mask, axis=(0, 1)) > 0)
 
     # Random horizontal flips.
     # TODO: will be removed in a future update in favor of augmentation
@@ -1259,7 +1261,9 @@ def load_image_gt(dataset, config, image_id, augment=False, augmentation=None,
     # Note that some boxes might be all zeros if the corresponding mask got cropped out.
     # and here is to filter them out
     _idx = np.sum(mask, axis=(0, 1)) > 0
+    # print("_idx",_idx)
     mask = mask[:, :, _idx]
+    # print("class_ids",class_ids)
     class_ids = class_ids[_idx]
     # Bounding boxes. Note that some boxes might be all zeros
     # if the corresponding mask got cropped out.
@@ -1698,6 +1702,7 @@ def data_generator(dataset, config, shuffle=True, augment=False, augmentation=No
             # where we train on a subset of classes and the image doesn't
             # have any of the classes we care about.
             if not np.any(gt_class_ids > 0):
+                print("------------")
                 continue
 
             # RPN Targets
