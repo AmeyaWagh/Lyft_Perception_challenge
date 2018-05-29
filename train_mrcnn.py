@@ -333,18 +333,18 @@ model.load_weights(COCO_MODEL_PATH, by_name=True,
                        exclude=["mrcnn_class_logits", "mrcnn_bbox_fc", 
                                 "mrcnn_bbox", "mrcnn_mask"])
 
-model.train(dataset_train, dataset_val, 
-            learning_rate=config.LEARNING_RATE, 
-            epochs=1, 
-            layers='heads')
+# model.train(dataset_train, dataset_val, 
+#             learning_rate=config.LEARNING_RATE, 
+#             epochs=1, 
+#             layers='heads')
 
-model.train(dataset_train, dataset_val, 
-            learning_rate=config.LEARNING_RATE / 10,
-            epochs=2, 
-            layers="all")
+# model.train(dataset_train, dataset_val, 
+#             learning_rate=config.LEARNING_RATE / 10,
+#             epochs=2, 
+#             layers="all")
 
-model_path = os.path.join(ROOT_DIR, "mask_rcnn_lyft.h5")
-model.keras_model.save_weights(model_path)
+# model_path = os.path.join(ROOT_DIR, "mask_rcnn_lyft.h5")
+# model.keras_model.save_weights(model_path)
 
 
 
@@ -373,16 +373,30 @@ model.load_weights(model_path, by_name=True)
 
 
 # # Test on a random image
+print(dataset_test.image_ids,type(dataset_test.image_ids))
+
+
 image_id = random.choice(dataset_test.image_ids)
-original_image, image_meta, gt_class_id, gt_bbox, gt_mask =\
-    modellib.load_image_gt(dataset_val, inference_config, 
-                           image_id, use_mini_mask=False)
 
-log("original_image", original_image)
-log("image_meta", image_meta)
-log("gt_class_id", gt_class_id)
-log("gt_bbox", gt_bbox)
-log("gt_mask", gt_mask)
+for image_id in dataset_test.image_ids: 
+    original_image, image_meta, gt_class_id, gt_bbox, gt_mask =\
+        modellib.load_image_gt(dataset_val, inference_config, 
+                               image_id, use_mini_mask=False)
 
-visualize.display_instances(original_image, gt_bbox, gt_mask, gt_class_id, 
-                            dataset_train.class_names, figsize=(8, 8))
+    log("original_image", original_image)
+    log("image_meta", image_meta)
+    log("gt_class_id", gt_class_id)
+    log("gt_bbox", gt_bbox)
+    log("gt_mask", gt_mask)
+    mask_1 = gt_mask[:,:,0]
+    mask_2 = gt_mask[:,:,1]
+    mask1 = np.dstack([mask_1*255,mask_1,mask_1])
+    mask2 = np.dstack([mask_2,mask_2*255,mask_2])
+    print(mask1.shape)
+    final_img = cv2.addWeighted(original_image, 1, mask1.astype(np.uint8), 1, 0)
+    final_img = cv2.addWeighted(final_img, 1, mask2.astype(np.uint8), 1, 0)
+    plt.imshow(final_img)
+    plt.show()
+
+# visualize.display_instances(original_image, gt_bbox, gt_mask, gt_class_id, 
+#                             dataset_train.class_names, figsize=(8, 8))
