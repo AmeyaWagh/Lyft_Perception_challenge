@@ -11,7 +11,7 @@ import cv2
 import matplotlib
 import matplotlib.pyplot as plt
 import skimage.io
-from imgaug import augmenters as iaa
+# from imgaug import augmenters as iaa
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -118,6 +118,7 @@ def segment_images(original_image):
             color_id=1
         # print('id:',_id)
         mask_1 = f_mask[:,:,ch]
+        print(mask_1)
         mask1 = np.dstack([mask_1*colors[color_id][0],
                             mask_1*colors[color_id][1],
                             mask_1*colors[color_id][2]])
@@ -125,12 +126,14 @@ def segment_images(original_image):
     return final_img
 
 for image_id in range(900,1000): 
+    try:
+        original_image = cv2.imread('./Train/CameraRGB/{}.png'.format(image_id))[:,:,::-1]
+       
+        final_img = segment_images(original_image)
 
-    original_image = cv2.imread('./Train/CameraRGB/{}.png'.format(image_id))[:,:,::-1]
-   
-    final_img = segment_images(original_image)
-
-    cv2.imshow('output', final_img[:,:,::-1])
-    cv2.waitKey(1)
+        cv2.imshow('output', final_img[:,:,::-1])
+        cv2.waitKey(5)
+    except KeyboardInterrupt as e:
+        break
 
 exit()

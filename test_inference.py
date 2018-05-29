@@ -8,11 +8,11 @@ import os
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-ROOT_DIR = os.path.abspath("./")
-MODEL_DIR = os.path.join('./', "logs")
+ROOT_DIR = os.path.abspath("./Lyft_challenge")
+MODEL_DIR = os.path.join('./Lyft_challenge', "logs")
 
 sys.path.append(ROOT_DIR)  # To find local version of the library
-sys.path.append(os.path.join(os.getcwd(),"./Mask_RCNN/"))
+sys.path.append(os.path.join(os.getcwd(),"./Lyft_challenge/Mask_RCNN/"))
 
 from mrcnn.config import Config
 from mrcnn import utils
@@ -58,7 +58,7 @@ class ShapesConfig(Config):
     
 
 config = ShapesConfig()
-config.display()
+# config.display()
 
 
 class InferenceConfig(ShapesConfig):
@@ -69,7 +69,7 @@ inference_config = InferenceConfig()
 
 file = sys.argv[-1]
 
-if file == 'demo.py':
+if file == 'test_inference.py':
   print ("Error loading video")
   quit
 
@@ -77,17 +77,27 @@ model = modellib.MaskRCNN(mode="inference",
                           config=inference_config,
                           model_dir=MODEL_DIR)
 
-model_path = os.path.join('./', "mask_rcnn_lyft.h5")
+model_path = os.path.join('./Lyft_challenge', "mask_rcnn_lyft.h5")
 assert model_path != "", "Provide path to trained weights"
-print("Loading weights from ", model_path)
+# print("Loading weights from ", model_path)
 model.load_weights(model_path, by_name=True)
 
-
+ROAD = 0
+CAR = 1
 def segment_image(image_frame):
     results = model.detect([image_frame], verbose=0)
     r = results[0]
-    road_mask = r['masks'][:,:,0]
-    car_mask = r['masks'][:,:,1]
+    no_ch = r['masks'].shape[2]
+    if no_ch < 2:
+        if r["class_ids"]==0:
+            road_mask = r['masks'][:,:,0]
+            car_mask = np.zeros(road_mask.shape)
+        else:
+            car_mask = r['masks'][:,:,0]
+            road_mask = np.zeros(car_mask.shape)
+    else:
+        road_mask = r['masks'][:,:,0]
+        car_mask = r['masks'][:,:,1]
 
     return car_mask,road_mask
 
@@ -110,13 +120,15 @@ for rgb_frame in video:
     # Grab red channel  
     # red = rgb_frame[:,:,0]    
     # Look for red cars :)
-    # binary_car_result = np.where(red>250,1,0).astype('uint8')
+    # 
     
     # Look for road :)
-    # binary_road_result = binary_car_result = np.where(red<20,1,0).astype('uint8')
-    binary_car_result,binary_road_result = segment_image(rgb_frame)
-
-    answer_key[frame] = [encode(binary_car_result), encode(binary_road_result)]
+    # 
+    car_mask,road_mask = segment_image(rgb_frame)
+    binary_car_result = car_mask*1
+    binary_road_result = road_mask*1
+    
+    answer_key[frame] = [encode(binary_car_result.astype('uint8')), encode(binary_road_result.astype('uint8'))]
     
     # Increment frame
     frame+=1
