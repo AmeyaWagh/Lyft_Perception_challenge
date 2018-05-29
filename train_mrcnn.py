@@ -124,7 +124,6 @@ class lyftDataset(utils.Dataset):
             print("not shape",image_info["source"])
             return super(self.__class__, self).load_mask(image_id)
         info = self.image_info[image_id]
-        # mask_label = skimage.io.imread(os.path.join(os.path.dirname(info["path"]),"../CameraSeg",info["id"])).astype(np.bool)
         mask_label = skimage.io.imread(os.path.join("./Train/CameraSeg",info["id"]))
         
         mask = self.process_labels(mask_label[:,:,0])
@@ -176,9 +175,9 @@ dataset_val = lyftDataset()
 dataset_val.load_images(RGB_PATH,dataset_type='val')
 dataset_val.prepare()
 
-dataset_test = lyftDataset()
-dataset_test.load_images(RGB_PATH,dataset_type='test')
-dataset_test.prepare()
+# dataset_test = lyftDataset()
+# dataset_test.load_images(RGB_PATH,dataset_type='test')
+# dataset_test.prepare()
 
 model = modellib.MaskRCNN(mode="training", config=config,
                           model_dir=MODEL_DIR)
@@ -227,35 +226,19 @@ model.load_weights(model_path, by_name=True)
 
 
 # # Test on a random image
-print(dataset_test.image_ids,type(dataset_test.image_ids))
-
-
-image_id = random.choice(dataset_test.image_ids)
-
 
 RED = (255,0,0)
 GREEN = (0,255,0)
 BLUE = (0,0,255)
 colors = [RED,GREEN,BLUE]
 
-for image_id in dataset_test.image_ids: 
-    original_image, image_meta, gt_class_id, gt_bbox, gt_mask =\
-        modellib.load_image_gt(dataset_val, inference_config, 
-                               image_id, use_mini_mask=False)
 
-    # molded_images = np.expand_dims(modellib.mold_image(original_image, inference_config), 0)
+def segment_images(original_image):
     results = model.detect([original_image], verbose=0)
     r = results[0]
     f_mask = r['masks']
     f_class = r["class_ids"]
     
-    log("original_image", original_image)
-    log("image_meta", image_meta)
-    log("gt_class_id", gt_class_id)
-    log("gt_bbox", gt_bbox)
-    log("gt_mask", gt_mask)
-    log("mask", f_mask)
-    log("f_class", f_class)
 
     no_ch = f_mask.shape[2]
     final_img = np.copy(original_image)
@@ -268,10 +251,19 @@ for image_id in dataset_test.image_ids:
             color_id=1
         print('id:',_id)
         mask_1 = f_mask[:,:,ch]
-        mask1 = np.dstack([mask_1*colors[color_id][0],mask_1*colors[color_id][1],mask_1*colors[color_id][2]])
+        mask1 = np.dstack([mask_1*colors[color_id][0],
+                            mask_1*colors[color_id][1],
+                            mask_1*colors[color_id][2]])
         final_img = cv2.addWeighted(final_img, 1, mask1.astype(np.uint8), 1, 0)
-    plt.imshow(final_img)
-    plt.show()
+    return final_img
 
-# visualize.display_instances(original_image, gt_bbox, gt_mask, gt_class_id, 
-#                             dataset_train.class_names, figsize=(8, 8))
+for image_id in range(900,1000): 
+
+    original_image = cv2.imread('./Train/CameraRGB/{}.png'.format(image_id))[:,:,::-1]
+   
+    final_img = segment_images(original_image)
+
+    cv2.imshow('output', final_img[:,:,::-1])
+    cv2.waitKey(1)
+
+exit()
