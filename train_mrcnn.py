@@ -243,22 +243,33 @@ for image_id in dataset_test.image_ids:
         modellib.load_image_gt(dataset_val, inference_config, 
                                image_id, use_mini_mask=False)
 
+    # molded_images = np.expand_dims(modellib.mold_image(original_image, inference_config), 0)
+    results = model.detect([original_image], verbose=0)
+    r = results[0]
+    f_mask = r['masks']
+    f_class = r["class_ids"]
+    
     log("original_image", original_image)
     log("image_meta", image_meta)
     log("gt_class_id", gt_class_id)
     log("gt_bbox", gt_bbox)
     log("gt_mask", gt_mask)
+    log("mask", f_mask)
+    log("f_class", f_class)
 
-    no_ch = gt_mask.shape[2]
+    no_ch = f_mask.shape[2]
     final_img = np.copy(original_image)
     for ch in range(no_ch):
-        mask_1 = gt_mask[:,:,ch]
-        # mask_2 = gt_mask[:,:,1]
-        mask1 = np.dstack([mask_1*colors[ch][0],mask_1*colors[ch][1],mask_1*colors[ch][2]])
-        # mask2 = np.dstack([mask_2*colors[ch][0],mask_2*colors[ch][1],mask_2*colors[ch][2]])
-        # print(mask1.shape)
+
+        _id = f_class[ch]
+        if _id==1: 
+            color_id=0
+        else:
+            color_id=1
+        print('id:',_id)
+        mask_1 = f_mask[:,:,ch]
+        mask1 = np.dstack([mask_1*colors[color_id][0],mask_1*colors[color_id][1],mask_1*colors[color_id][2]])
         final_img = cv2.addWeighted(final_img, 1, mask1.astype(np.uint8), 1, 0)
-        # final_img = cv2.addWeighted(final_img, 1, mask2.astype(np.uint8), 1, 0)
     plt.imshow(final_img)
     plt.show()
 
