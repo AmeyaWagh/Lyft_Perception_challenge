@@ -4,9 +4,13 @@
 
 ## Training
 
-Loss
+<!-- Loss
+
+heads = 10 all = 40 
 
 ![loss](./assets/loss_40.png)
+
+heads = 40 all = 100
 
 ![loss](./assets/loss2.png)
 
@@ -14,7 +18,15 @@ Validation loss
 
 ![val_loss](./assets/val_loss_40.png)
 
-![val_loss](./assets/val_loss2.png)
+![val_loss](./assets/val_loss2.png) -->
+
+
+| heads Epoch | all Epoch | loss | val_loss |
+|:-----------:|:---------:|:----:|:--------:|
+| 10 		  | 40		  | ![loss](./assets/loss_40.png) | ![val_loss](./assets/val_loss_40.png) |
+| 40 		  | 100		  | ![loss](./assets/loss2.png) | ![val_loss](./assets/val_loss2.png) |
+
+
 
 ## Reference
 https://github.com/matterport/Mask_RCNN
