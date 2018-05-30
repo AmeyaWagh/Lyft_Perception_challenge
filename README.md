@@ -8,9 +8,13 @@ Loss
 
 ![loss](./assets/loss_40.png)
 
+![loss](./assets/loss2.png)
+
 Validation loss
 
 ![val_loss](./assets/val_loss_40.png)
+
+![val_loss](./assets/val_loss2.png)
 
 ## Reference
 https://github.com/matterport/Mask_RCNN
