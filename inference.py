@@ -118,21 +118,32 @@ def segment_images(original_image):
             color_id=1
         # print('id:',_id)
         mask_1 = f_mask[:,:,ch]
-        print(mask_1)
+        # print(mask_1)
         mask1 = np.dstack([mask_1*colors[color_id][0],
                             mask_1*colors[color_id][1],
                             mask_1*colors[color_id][2]])
         final_img = cv2.addWeighted(final_img, 1, mask1.astype(np.uint8), 1, 0)
     return final_img
 
-for image_id in range(900,1000): 
-    try:
-        original_image = cv2.imread('./Train/CameraRGB/{}.png'.format(image_id))[:,:,::-1]
+# for image_id in range(900,1000): 
+#     try:
+#         original_image = cv2.imread('./Train/CameraRGB/{}.png'.format(image_id))[:,:,::-1]
        
-        final_img = segment_images(original_image)
+#         final_img = segment_images(original_image)
 
+#         cv2.imshow('output', final_img[:,:,::-1])
+#         cv2.waitKey(5)
+#     except KeyboardInterrupt as e:
+#         break
+import sys, skvideo.io, json, base64
+
+
+video = skvideo.io.vread('./test_video.mp4')
+for rgb_frame in video:
+    try:
+        final_img = segment_images(rgb_frame)
         cv2.imshow('output', final_img[:,:,::-1])
-        cv2.waitKey(5)
+        cv2.waitKey(1)
     except KeyboardInterrupt as e:
         break
 
