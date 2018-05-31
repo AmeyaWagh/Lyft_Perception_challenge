@@ -25,7 +25,7 @@ Validation loss
 |:-----------:|:---------:|:----:|:--------:|
 | 10 		  | 40		  | ![loss](./assets/loss_40.png) | ![val_loss](./assets/val_loss_40.png) |
 | 40 		  | 100		  | ![loss](./assets/loss2.png) | ![val_loss](./assets/val_loss2.png) |
-| 10		  | 20 		  | ![loss](./assets/loss3.png) | ![val_loss](./assets/val_loss3.png) |
+| 10		  | 40 		  | ![loss](./assets/loss3.png) | ![val_loss](./assets/val_loss3.png) |
 | 20		  | 60 		  | ![loss](./assets/loss4.png) | ![val_loss](./assets/val_loss4.png) |
 
 
