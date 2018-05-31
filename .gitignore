@@ -1,3 +1,4 @@
 Train/
 *.h5
 logs/
+*.zip

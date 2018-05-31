@@ -46,7 +46,7 @@ class ShapesConfig(Config):
     # Train on 1 GPU and 8 images per GPU. We can put multiple images on each
     # GPU because the images are small. Batch size is 8 (GPUs * images/GPU).
     GPU_COUNT = 1
-    IMAGES_PER_GPU = 2
+    IMAGES_PER_GPU = 1
 
     # Number of classes (including background)
     NUM_CLASSES = 1 + 2  # background + 3 shapes
@@ -65,7 +65,7 @@ class ShapesConfig(Config):
     TRAIN_ROIS_PER_IMAGE = 32
 
     # Use a small epoch since the data is simple
-    STEPS_PER_EPOCH = 500
+    STEPS_PER_EPOCH = 200
 
     # use small validation steps since the epoch is small
     VALIDATION_STEPS = 5
@@ -87,11 +87,12 @@ class lyftDataset(utils.Dataset):
         self.add_class("shapes", 2, "car")
 
         if dataset_type=='train':
-            images = images[:800]
+            images = images[:900]
         elif dataset_type=='val':
-            images = images[800:900]
-        else:
             images = images[900:]
+        else:
+            # images = images[900:]
+            raise ValueError("param should be train or val")
 
         for _image in images:
             # image = skimage.io.imread(os.path.join(image_paths,_image))
@@ -179,7 +180,7 @@ dataset_val.prepare()
 # dataset_test = lyftDataset()
 # dataset_test.load_images(RGB_PATH,dataset_type='test')
 # dataset_test.prepare()
-augmentation = iaa.SomeOf((0, 2), [
+augmentation = iaa.SomeOf((0, None), [
         iaa.Fliplr(0.5),
         iaa.Flipud(0.5),
         iaa.OneOf([iaa.Affine(rotate=90),
@@ -214,13 +215,13 @@ model.load_weights(model_path, by_name=True)
 
 model.train(dataset_train, dataset_val, 
             learning_rate=config.LEARNING_RATE, 
-            epochs=10,
+            epochs=20,
             augmentation=augmentation, 
             layers='heads')
 
 model.train(dataset_train, dataset_val, 
             learning_rate=config.LEARNING_RATE / 10,
-            epochs=20,
+            epochs=60,
             augmentation=augmentation, 
             layers="all")
 
@@ -279,13 +280,13 @@ def segment_images(original_image):
         final_img = cv2.addWeighted(final_img, 1, mask1.astype(np.uint8), 1, 0)
     return final_img
 
-for image_id in range(900,1000): 
+# for image_id in range(900,1000): 
 
-    original_image = cv2.imread('./Train/CameraRGB/{}.png'.format(image_id))[:,:,::-1]
+#     original_image = cv2.imread('./Train/CameraRGB/{}.png'.format(image_id))[:,:,::-1]
    
-    final_img = segment_images(original_image)
+#     final_img = segment_images(original_image)
 
-    cv2.imshow('output', final_img[:,:,::-1])
-    cv2.waitKey(1)
+#     cv2.imshow('output', final_img[:,:,::-1])
+#     cv2.waitKey(1)
 
 exit()

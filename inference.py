@@ -11,9 +11,10 @@ import cv2
 import matplotlib
 import matplotlib.pyplot as plt
 import skimage.io
+import time
 # from imgaug import augmenters as iaa
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 ROOT_DIR = os.path.abspath("./")
 MODEL_DIR = os.path.join('./', "logs")
@@ -40,7 +41,7 @@ class ShapesConfig(Config):
     # Train on 1 GPU and 8 images per GPU. We can put multiple images on each
     # GPU because the images are small. Batch size is 8 (GPUs * images/GPU).
     GPU_COUNT = 1
-    IMAGES_PER_GPU = 4
+    IMAGES_PER_GPU = 1
 
     # Number of classes (including background)
     NUM_CLASSES = 1 + 2  # background + 3 shapes
@@ -97,6 +98,9 @@ colors = [RED,GREEN,BLUE]
 
 def segment_images(original_image):
     results = model.detect([original_image], verbose=0)
+    # print ("-"*80)
+    # print(len(results))
+    # print ("-"*80)
     r = results[0]
     f_mask = r['masks']
     f_class = r["class_ids"]
@@ -118,20 +122,41 @@ def segment_images(original_image):
         final_img = cv2.addWeighted(final_img, 1, mask1.astype(np.uint8), 1, 0)
     return final_img
 
-# for image_id in range(900,1000): 
-#     try:
-#         original_image = cv2.imread('./Train/CameraRGB/{}.png'.format(image_id))[:,:,::-1]
-       
-#         final_img = segment_images(original_image)
+def segment_images_batch(original_images):
+    results = model.detect(original_images, verbose=0)
+    print ("-"*80)
+    print(len(results))
+    print ("-"*80)
+    images = []
+    for idx,res in enumerate(results):
+        r = res
+        f_mask = r['masks']
+        f_class = r["class_ids"]
+        
 
-#         cv2.imshow('output', final_img[:,:,::-1])
-#         cv2.waitKey(5)
-#     except KeyboardInterrupt as e:
-#         break
+        no_ch = f_mask.shape[2]
+        final_img = np.copy(original_images[idx,:,:,:])
+        for ch in range(no_ch):
+
+            _id = f_class[ch]
+            if _id==1: 
+                color_id=0
+            else:
+                color_id=1
+            mask_1 = f_mask[:,:,ch]
+            mask1 = np.dstack([mask_1*colors[color_id][0],
+                                mask_1*colors[color_id][1],
+                                mask_1*colors[color_id][2]])
+            final_img = cv2.addWeighted(final_img, 1, mask1.astype(np.uint8), 1, 0)
+            images.append(final_img)
+    return np.dstack(images)
+
 import sys, skvideo.io, json, base64
 
 
 video = skvideo.io.vread('./test_video.mp4')
+print(video.shape)
+
 for rgb_frame in video:
     try:
         final_img = segment_images(rgb_frame)
@@ -139,5 +164,22 @@ for rgb_frame in video:
         cv2.waitKey(1)
     except KeyboardInterrupt as e:
         break
+
+# video_len = video.shape[0]
+# offset=1
+# a = time.time()
+# for idx in range(0,video_len,4):
+#     # if video_len-idx >4:
+#     #     offset = 4
+#     # else: 
+#     #     offset = video_len-idx
+#     # model.config.IMAGES_PER_GPU = offset
+#     rgb_frames = video[idx:idx+offset,:,:,:]
+#     print(rgb_frames.shape)
+#     final_img = segment_images_batch(rgb_frames)
+# b=time.time()
+# _secs = (b-a)%60
+
+# print("FPS:",video_len/_secs)
 
 exit()
