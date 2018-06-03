@@ -2,7 +2,7 @@ import sys, skvideo.io, json, base64
 import numpy as np
 from PIL import Image
 from io import BytesIO, StringIO
-
+import cv2
 
 import os
 
@@ -102,11 +102,15 @@ def segment_image(image_frame):
     return car_mask,road_mask
 
 # Define encoder function
+# def encode(array):
+#     pil_img = Image.fromarray(array)
+#     buff = BytesIO()
+#     pil_img.save(buff, format="PNG")
+#     return base64.b64encode(buff.getvalue()).decode("utf-8")
+
 def encode(array):
-    pil_img = Image.fromarray(array)
-    buff = BytesIO()
-    pil_img.save(buff, format="PNG")
-    return base64.b64encode(buff.getvalue()).decode("utf-8")
+    retval, buffer = cv2.imencode('.png', array)
+    return base64.b64encode(buffer).decode("utf-8")
 
 video = skvideo.io.vread(file)
 

@@ -75,8 +75,6 @@ config.display()
 
 
 
-
-
 class lyftDataset(utils.Dataset):
     random_idx=0
     def load_images(self,dataset_dir,dataset_type='train'):

@@ -1,41 +1,52 @@
 
 
----
 
-![Header](./assets/Udacity_Header.png)
+<!-- ![Header](./assets/crop_header.png) -->
+
+<div style="text-align:center"><img src=./assets/Udacity_Header.png width="1000" height="400" ></div>
 
 
-# Lyft Perception Challenge
+# * Lyft Perception Challenge *
 
----
 
-## About the challenge
+<!-- ## About the challenge -->
+The [lyft Perception challenge](https://www.udacity.com/lyft-challenge) in association with Udacity had an image segmentation task where the candidates had to submit their algorithm which could segment road and cars pixels as precisely as possible. The challenge started on May 1st,2018 and went through June 3rd, 2018.
 
 ## Approach
+Although it was a segmentation problem and did not require instance segmentation, I went ahead with [MASK-RCNN](https://arxiv.org/pdf/1703.06870.pdf) as it was the state of the art algorithm in image segmentation and I was always intrigued to learn about it.
+
+### Mask-RCNN
+Mask-RCNN, also known as [Detectron](https://github.com/facebookresearch/Detectron) is a research platform for object detection developed by facebookresearch. It uses Resnet as the backbone, 
+For this application Resnet-50 was used by setting `BACKBONE = "resnet50"` in config.
 
 ## Training
 
-
-
-| heads Epoch | all Epoch | loss | val_loss |
-|:-----------:|:---------:|:----:|:--------:|
-| 10 		  | 40		  | ![loss](./assets/loss_40.png) | ![val_loss](./assets/val_loss_40.png) |
-| 40 		  | 100		  | ![loss](./assets/loss2.png) | ![val_loss](./assets/val_loss2.png) |
-| 10		  | 40 		  | ![loss](./assets/loss3.png) | ![val_loss](./assets/val_loss3.png) |
-| 20		  | 60 		  | ![loss](./assets/loss4.png) | ![val_loss](./assets/val_loss4.png) |
-
+| heads Epoch | all Epoch | loss 							| val_loss 								|
+|:-----------:|:---------:|:-------------------------------:|:-------------------------------------:|
+| 10 		  | 40		  | ![loss](./assets/loss_40.png) 	| ![val_loss](./assets/val_loss_40.png)	|
+| 40 		  | 100		  | ![loss](./assets/loss2.png) 	| ![val_loss](./assets/val_loss2.png) 	|
+| 10		  | 40 		  | ![loss](./assets/loss3.png) 	| ![val_loss](./assets/val_loss3.png) 	|
+| 20		  | 60 		  | ![loss](./assets/loss4.png) 	| ![val_loss](./assets/val_loss4.png) 	|
 
 
 ## Results
 
 ```
-Your program runs at 1.730 FPS
+Your program runs at 1.703 FPS
 
-Car F score: 0.455 | Car Precision: 0.243 | Car Recall: 0.582 | Road F score: 0.949 | Road Precision: 0.986 | Road Recall: 0.825 | Averaged F score: 0.702
+Car F score: 0.519 | Car Precision: 0.509 | Car Recall: 0.521 | Road F score: 0.961 | Road Precision: 0.970 | Road Recall: 0.926 | Averaged F score: 0.740
 ```
 
 
 ## Inference and Submission
+
+## Submission
+Submission requires files to be encoded in a json. `test_inference.py` contains the inference and submission code. In attempt to increase the FPS, The encode function was replaced with the follows which was shared on the forum
+```python
+def encode(array):
+    retval, buffer = cv2.imencode('.png', array)
+    return base64.b64encode(buffer).decode("utf-8")
+```
 
 ## Reference
 https://github.com/matterport/Mask_RCNN
@@ -50,6 +61,7 @@ https://github.com/matterport/Mask_RCNN
   commit = {6c9c82f5feaf5d729a72c67f33e139c4bc71399b}
 }
 ```
+
 
 ## Author
 
