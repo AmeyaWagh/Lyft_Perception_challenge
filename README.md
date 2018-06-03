@@ -141,6 +141,43 @@ Instead of a single training loop, it was trained multiple times in smaller epoc
 | 20		  | 60 		  | ![loss](./assets/loss4.png) 	| ![val_loss](./assets/val_loss4.png) 	|
 
 
+For the purpose of this competition, I froze the bounding box and class label layer and only trained the masks head by adding 2 new regex (`just_mrcnn_mask`,`heads_mask`) to the layers in train method of Model found in `Mask_RCNN/mrcnn/model.py`
+
+```python
+ layer_regex = {
+            # all layers but the backbone
+            "heads": r"(mrcnn\_.*)|(rpn\_.*)|(fpn\_.*)",
+            
+            # just to train the branch dealing with masks
+            "just_mrcnn_mask": r"(mrcnn\_mask.*)",
+            "heads_mask": r"(mrcnn\_mask.*)|(rpn\_.*)|(fpn\_.*)",
+            
+            # From a specific Resnet stage and up
+            "3+": r"(res3.*)|(bn3.*)|(res4.*)|(bn4.*)|(res5.*)|(bn5.*)|(mrcnn\_.*)|(rpn\_.*)|(fpn\_.*)",
+            "4+": r"(res4.*)|(bn4.*)|(res5.*)|(bn5.*)|(mrcnn\_.*)|(rpn\_.*)|(fpn\_.*)",
+            "5+": r"(res5.*)|(bn5.*)|(mrcnn\_.*)|(rpn\_.*)|(fpn\_.*)",
+            
+            # All layers
+            "all": ".*",
+        }
+```
+
+Following is the sample snippet of training function
+
+```python
+model.train(dataset_train, dataset_val, 
+            learning_rate=config.LEARNING_RATE,
+            epochs=2,
+            augmentation=augmentation, 
+            layers="just_mrcnn_mask")
+
+model.train(dataset_train, dataset_val, 
+            learning_rate=config.LEARNING_RATE/10.0,
+            epochs=10,
+            augmentation=augmentation, 
+            layers="heads_mask")
+```
+
 ## Results
 
 ```
@@ -149,8 +186,19 @@ Your program runs at 1.703 FPS
 Car F score: 0.519 | Car Precision: 0.509 | Car Recall: 0.521 | Road F score: 0.961 | Road Precision: 0.970 | Road Recall: 0.926 | Averaged F score: 0.740
 ```
 
+I also observed that the class frequency was imbalanced and there were fewer number of samples with cars than roads. This could have been solved by weighing the loss function but faced dimension issues while implementing it
+
 
 ## Inference and Submission
+
+### Inference
+The inference configuration uses a batch size of only one image. To improve the FPS, a batch of image was taken from the video and was passed to the pipeline but this did not improve the FPS drastically and rather increased the complexity as the test video had odd number of frames.
+
+```python
+class InferenceConfig(ShapesConfig):
+    GPU_COUNT = 1
+    IMAGES_PER_GPU = 1
+```
 
 ### Submission
 Submission requires files to be encoded in a json. `test_inference.py` contains the inference and submission code. In attempt to increase the FPS, The encode function was replaced with the follows which was shared on the forum
@@ -160,8 +208,31 @@ def encode(array):
     return base64.b64encode(buffer).decode("utf-8")
 ```
 
+
+## Code Execution
+- training on CARLA dataset
+```sh
+python train_mrcnn.py
+```
+- test inference on test_video.mp4
+```sh
+python inference.py
+```
+- submission script `test_inference.py`
+```sh
+grader 'python Lyft_challenge/test_inference.py'
+```
+
+## Requirements
+Python 3.4, TensorFlow 1.3, Keras 2.0.8, pycocotools and other dependencies required for [https://github.com/matterport/Mask_RCNN](https://github.com/matterport/Mask_RCNN)
+
+
+## Acknowledgement 
+This code heavily uses [https://github.com/matterport/Mask_RCNN](https://github.com/matterport/Mask_RCNN) by [waleedka](https://github.com/waleedka). Thanks for your contribution.
+
+
+
 ## Reference
-https://github.com/matterport/Mask_RCNN
 ```
 @misc{Charles2013,
   author = {waleedka et.al},
