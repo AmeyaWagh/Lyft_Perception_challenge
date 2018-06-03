@@ -15,15 +15,29 @@ The [lyft Perception challenge](https://www.udacity.com/lyft-challenge) in assoc
 ## Approach
 Although it was a segmentation problem and did not require instance segmentation, I went ahead with [MASK-RCNN](https://arxiv.org/pdf/1703.06870.pdf) as it was the state of the art algorithm in image segmentation and I was always intrigued to learn about it. Also I started on *28th*, just after finishing my first term, so transfer learning was my only shot. :sweat:
 
-#### Mask-RCNN
-Mask-RCNN, also known as [Detectron](https://github.com/facebookresearch/Detectron) is a research platform for object detection developed by facebookresearch. It is mainly a modification of Faster RCNN with a segmentation branch parallel to class predictor and bounding box regressor. 
+#### Mask-RCNN (A brief overview)
 
+Mask-RCNN, also known as [Detectron](https://github.com/facebookresearch/Detectron) is a research platform for object detection developed by facebookresearch. It is mainly a modification of Faster RCNN with a segmentation branch parallel to class predictor and bounding box regressor. The vanilla ResNet is used in an FPN setting as a backbone to Faster RCNN so that features can be extracted at multiple levels of the feature pyramid
+The network heads consists of the Mask branch which predicts the mask and a classification with bounding box regression branch. The architecture with FPN was used for the purpose of this competition
 
-For this application Resnet-50 was used by setting `BACKBONE = "resnet50"` in config.
+| Backbone 					| Heads 					 |
+|:-------------------------:|:--------------------------:|
+| ![FPN](./assets/fpn.png)  | ![FPN](./assets/heads.png) |
+| Feature Pyramid network with Resnet | different head architecture with and without FPN |
+
+The loss function consists of 3 losses *L = L<sub>class</sub> + L<sub>box</sub> + L<sub>mask</sub>* where
+ - `L<sub>class</sub>`  uses log loss for true classes
+ - `L<sub>box</sub>` uses smooth<sub>L1</sub> loss defined in [Fast RCNN]
+ - `L<sub>mask</sub>` uses average binary cross entropy loss
+
+The masks are predicted by a [Fully Connected Network](https://arxiv.org/pdf/1605.06211.pdf) for each RoI. This maintains the mxm dimension for each mask and thus for each instance of the object we get distinct masks. 
+
+The model output after compiling the keras model can be found at [model](./assets/model.png)
 
 ## Training
 
 #### MaskRCNN Configuration
+For this application Resnet-50 was used by setting `BACKBONE = "resnet50"` in config.
 
 #### Processing Data
 
@@ -74,6 +88,12 @@ https://github.com/matterport/Mask_RCNN
   commit = {6c9c82f5feaf5d729a72c67f33e139c4bc71399b}
 }
 ```
+
+ - [Mask RCNN](https://arxiv.org/pdf/1703.06870.pdf)
+ - [Fast RCNN](https://arxiv.org/pdf/1504.08083.pdf)
+ - [Faster RCNN](https://arxiv.org/pdf/1506.01497.pdf)
+ - [Feature Pyramid Networks for Object Detection](https://arxiv.org/pdf/1612.03144.pdf)
+ - [Fully Connected Network](https://arxiv.org/pdf/1605.06211.pdf)
 
 
 ## Author
