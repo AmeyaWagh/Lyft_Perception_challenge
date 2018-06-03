@@ -289,18 +289,6 @@ This code heavily uses [https://github.com/matterport/Mask_RCNN](https://github.
 
 
 ## Reference
-```
-@misc{Charles2013,
-  author = {waleedka et.al},
-  title = {Mask R-CNN for Object Detection and Segmentation},
-  year = {2018},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{https://github.com/matterport/Mask_RCNN}},
-  commit = {6c9c82f5feaf5d729a72c67f33e139c4bc71399b}
-}
-```
-
  - [Mask RCNN](https://arxiv.org/pdf/1703.06870.pdf)
  - [Fast RCNN](https://arxiv.org/pdf/1504.08083.pdf)
  - [Faster RCNN](https://arxiv.org/pdf/1506.01497.pdf)
