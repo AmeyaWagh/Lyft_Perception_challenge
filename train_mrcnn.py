@@ -35,7 +35,7 @@ if not os.path.exists(COCO_MODEL_PATH):
     utils.download_trained_weights(COCO_MODEL_PATH)
 
 
-class ShapesConfig(Config):
+class LyftChallengeConfig(Config):
     """Configuration for training on the toy shapes dataset.
     Derives from the base Config class and overrides values specific
     to the toy shapes dataset.
@@ -49,7 +49,7 @@ class ShapesConfig(Config):
     IMAGES_PER_GPU = 1
 
     # Number of classes (including background)
-    NUM_CLASSES = 1 + 2  # background + 3 shapes
+    NUM_CLASSES = 1 + 2  # background + 2 shapes
 
     # Use small images for faster training. Set the limits of the small side
     # the large side, and that determines the image shape.
@@ -65,12 +65,12 @@ class ShapesConfig(Config):
     TRAIN_ROIS_PER_IMAGE = 32
 
     # Use a small epoch since the data is simple
-    STEPS_PER_EPOCH = 200
+    STEPS_PER_EPOCH = 100
 
     # use small validation steps since the epoch is small
     VALIDATION_STEPS = 5
     
-config = ShapesConfig()
+config = LyftChallengeConfig()
 config.display()
 
 
@@ -81,6 +81,7 @@ class lyftDataset(utils.Dataset):
     random_idx=0
     def load_images(self,dataset_dir,dataset_type='train'):
         image_paths = os.path.join(dataset_dir,'CameraRGB')
+        # image_paths = os.path.join(dataset_dir,'extraRGB')
         images = os.listdir(image_paths)
 
         self.add_class("shapes", 1, "road")
@@ -109,6 +110,7 @@ class lyftDataset(utils.Dataset):
         """
         # Load image
         image = skimage.io.imread(self.image_info[image_id]['path'])
+        image = cv2.resize(image,(256,256))
         # If grayscale. Convert to RGB for consistency.
         if image.ndim != 3:
             image = skimage.color.gray2rgb(image)
@@ -127,8 +129,10 @@ class lyftDataset(utils.Dataset):
             return super(self.__class__, self).load_mask(image_id)
         info = self.image_info[image_id]
         mask_label = skimage.io.imread(os.path.join("./Train/CameraSeg",info["id"]))
-        
+        # mask_label = skimage.io.imread(os.path.join("./Train/extraSeg",info["id"]))
+
         mask = self.process_labels(mask_label[:,:,0])
+        mask = cv2.resize(mask,(256,256))
         
         return mask,np.array([1,2], dtype=np.int32)
 
@@ -188,10 +192,10 @@ augmentation = iaa.SomeOf((0, None), [
                    iaa.Affine(rotate=270)]),
         iaa.Multiply((0.8, 1.5)),
         iaa.GaussianBlur(sigma=(0.0, 5.0)),
-        iaa.PiecewiseAffine(scale=(0.01, 0.05)),
+        # iaa.PiecewiseAffine(scale=(0.01, 0.05)),
         iaa.Affine(scale=(0.5, 1.5)),
         iaa.Affine(scale={"x": (0.5, 1.5), "y": (0.5, 1.5)}),
-        iaa.ElasticTransformation(alpha=(0, 5.0), sigma=0.25)
+        # iaa.ElasticTransformation(alpha=(0, 5.0), sigma=0.25)
     ])
 
 
@@ -204,6 +208,7 @@ model = modellib.MaskRCNN(mode="training", config=config,
 #                        exclude=["mrcnn_class_logits", "mrcnn_bbox_fc", 
 #                                 "mrcnn_bbox", "mrcnn_mask"])
 
+# model_path = os.path.join('./', "mask_rcnn_lyft.h5")
 model_path = os.path.join('./', "mask_rcnn_lyft.h5")
 # model_path = model.find_last()[1]
 
@@ -213,15 +218,31 @@ print("Loading weights from ", model_path)
 model.load_weights(model_path, by_name=True)
 
 
-model.train(dataset_train, dataset_val, 
-            learning_rate=config.LEARNING_RATE, 
-            epochs=20,
-            augmentation=augmentation, 
-            layers='heads')
+print("Training ...")
+# print(model.get_trainable_layers())
+# exit()
+
+# model.train(dataset_train, dataset_val, 
+#             learning_rate=config.LEARNING_RATE, 
+#             epochs=20,
+#             augmentation=augmentation, 
+#             layers='heads')
+
+# model.train(dataset_train, dataset_val, 
+#             learning_rate=config.LEARNING_RATE / 100.0,
+#             epochs=10,
+#             augmentation=augmentation, 
+#             layers="just_mrcnn_mask")
+
+# model.train(dataset_train, dataset_val, 
+#             learning_rate=config.LEARNING_RATE ,
+#             epochs=20,
+#             augmentation=augmentation, 
+#             layers="heads")
 
 model.train(dataset_train, dataset_val, 
-            learning_rate=config.LEARNING_RATE / 10,
-            epochs=60,
+            learning_rate=config.LEARNING_RATE/10.0,
+            epochs=30,
             augmentation=augmentation, 
             layers="all")
 
@@ -232,7 +253,7 @@ model.keras_model.save_weights(model_path)
 
 # inference
 
-class InferenceConfig(ShapesConfig):
+class InferenceConfig(LyftChallengeConfig):
     GPU_COUNT = 1
     IMAGES_PER_GPU = 1
 
