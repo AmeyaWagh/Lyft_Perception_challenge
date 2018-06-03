@@ -26,9 +26,9 @@ The network heads consists of the Mask branch which predicts the mask and a clas
 | Feature Pyramid network with Resnet | different head architecture with and without FPN |
 
 The loss function consists of 3 losses *L = L<sub>class</sub> + L<sub>box</sub> + L<sub>mask</sub>* where
- - `L<sub>class</sub>`  uses log loss for true classes
- - `L<sub>box</sub>` uses smooth<sub>L1</sub> loss defined in [Fast RCNN]
- - `L<sub>mask</sub>` uses average binary cross entropy loss
+ - *L<sub>class</sub>*  uses log loss for true classes
+ - *L<sub>box</sub>* uses smooth<sub>L1</sub> loss defined in [Fast RCNN]
+ - *L<sub>mask</sub>* uses average binary cross entropy loss
 
 The masks are predicted by a [Fully Connected Network](https://arxiv.org/pdf/1605.06211.pdf) for each RoI. This maintains the mxm dimension for each mask and thus for each instance of the object we get distinct masks. 
 
