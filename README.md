@@ -152,7 +152,7 @@ Instead of a single training loop, it was trained multiple times in smaller epoc
 | 20		  | 60 		  | ![loss](./assets/loss4.png) 	| ![val_loss](./assets/val_loss4.png) 	|
 
 
-For the purpose of this competition, I froze the bounding box and class label layer and only trained the masks head by adding 2 new regex (`just_mrcnn_mask`,`heads_mask`) to the layers in train method of Model found in `Mask_RCNN/mrcnn/model.py`
+For the purpose of this competition, after 2 training sets I froze the bounding box and class label layer and only trained the masks head by adding 2 new regex (`just_mrcnn_mask`,`heads_mask`) to the layers in train method of Model found in `Mask_RCNN/mrcnn/model.py` also some more augmentation was added.
 
 ```python
  layer_regex = {
