@@ -142,6 +142,7 @@ Examples of augmentation are given in [https://github.com/matterport/Mask_RCNN](
 
 #### Training Loss
 
+The model was trained using pretrained CoCo weights.
 Instead of a single training loop, it was trained multiple times in smaller epochs to observe change in the loss with changes in parameters and to avoid overfitting. As the data was less, the network used to saturate quickly and required more augmentations to proceed. Also i did not wanted to go overboard on the augmentation so was observing which one works best. Below are the logs of final training setting with the above given augmentation.   
 
 | heads Epoch | all Epoch | loss 							| val_loss 								|

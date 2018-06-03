@@ -12,9 +12,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import skimage.io
 import time
-# from imgaug import augmenters as iaa
 
-# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 ROOT_DIR = os.path.abspath("./")
 MODEL_DIR = os.path.join('./', "logs")
@@ -31,7 +30,7 @@ from moviepy.editor import VideoFileClip
 
 
 
-class ShapesConfig(Config):
+class LyftChallengeConfig(Config):
     """Configuration for training on the toy shapes dataset.
     Derives from the base Config class and overrides values specific
     to the toy shapes dataset.
@@ -68,10 +67,10 @@ class ShapesConfig(Config):
     
 
     
-config = ShapesConfig()
+config = LyftChallengeConfig()
 config.display()
 
-class InferenceConfig(ShapesConfig):
+class InferenceConfig(LyftChallengeConfig):
     GPU_COUNT = 1
     IMAGES_PER_GPU = 1
 
@@ -99,9 +98,6 @@ colors = [RED,GREEN,BLUE]
 
 def segment_images(original_image):
     results = model.detect([original_image], verbose=0)
-    # print ("-"*80)
-    # print(len(results))
-    # print ("-"*80)
     r = results[0]
     f_mask = r['masks']
     f_class = r["class_ids"]
@@ -123,34 +119,6 @@ def segment_images(original_image):
         final_img = cv2.addWeighted(final_img, 1, mask1.astype(np.uint8), 1, 0)
     return final_img
 
-def segment_images_batch(original_images):
-    results = model.detect(original_images, verbose=0)
-    print ("-"*80)
-    print(len(results))
-    print ("-"*80)
-    images = []
-    for idx,res in enumerate(results):
-        r = res
-        f_mask = r['masks']
-        f_class = r["class_ids"]
-        
-
-        no_ch = f_mask.shape[2]
-        final_img = np.copy(original_images[idx,:,:,:])
-        for ch in range(no_ch):
-
-            _id = f_class[ch]
-            if _id==1: 
-                color_id=0
-            else:
-                color_id=1
-            mask_1 = f_mask[:,:,ch]
-            mask1 = np.dstack([mask_1*colors[color_id][0],
-                                mask_1*colors[color_id][1],
-                                mask_1*colors[color_id][2]])
-            final_img = cv2.addWeighted(final_img, 1, mask1.astype(np.uint8), 1, 0)
-            images.append(final_img)
-    return np.dstack(images)
 
 import sys, skvideo.io, json, base64
 

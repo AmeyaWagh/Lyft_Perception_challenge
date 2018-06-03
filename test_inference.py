@@ -8,11 +8,11 @@ import os
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-ROOT_DIR = os.path.abspath("./Lyft_challenge")
-MODEL_DIR = os.path.join('./Lyft_challenge', "logs")
+ROOT_DIR = os.path.abspath("./")
+MODEL_DIR = os.path.join('./', "logs")
 
 sys.path.append(ROOT_DIR)  # To find local version of the library
-sys.path.append(os.path.join(os.getcwd(),"./Lyft_challenge/Mask_RCNN/"))
+sys.path.append(os.path.join(os.getcwd(),"./Mask_RCNN/"))
 
 from mrcnn.config import Config
 from mrcnn import utils
@@ -21,13 +21,13 @@ from mrcnn import visualize
 from mrcnn.model import log
 
 
-class ShapesConfig(Config):
+class LyftChallengeConfig(Config):
     """Configuration for training on the toy shapes dataset.
     Derives from the base Config class and overrides values specific
     to the toy shapes dataset.
     """
     # Give the configuration a recognizable name
-    NAME = "shapes"
+    NAME = "lyft_perception_challenge"
 
     # Train on 1 GPU and 8 images per GPU. We can put multiple images on each
     # GPU because the images are small. Batch size is 8 (GPUs * images/GPU).
@@ -57,11 +57,11 @@ class ShapesConfig(Config):
     VALIDATION_STEPS = 5
     
 
-config = ShapesConfig()
+config = LyftChallengeConfig()
 # config.display()
 
 
-class InferenceConfig(ShapesConfig):
+class InferenceConfig(LyftChallengeConfig):
     GPU_COUNT = 1
     IMAGES_PER_GPU = 1
 
@@ -77,7 +77,7 @@ model = modellib.MaskRCNN(mode="inference",
                           config=inference_config,
                           model_dir=MODEL_DIR)
 
-model_path = os.path.join('./Lyft_challenge', "mask_rcnn_lyft.h5")
+model_path = os.path.join('./', "mask_rcnn_lyft.h5")
 assert model_path != "", "Provide path to trained weights"
 # print("Loading weights from ", model_path)
 model.load_weights(model_path, by_name=True)
@@ -101,12 +101,6 @@ def segment_image(image_frame):
 
     return car_mask,road_mask
 
-# Define encoder function
-# def encode(array):
-#     pil_img = Image.fromarray(array)
-#     buff = BytesIO()
-#     pil_img.save(buff, format="PNG")
-#     return base64.b64encode(buff.getvalue()).decode("utf-8")
 
 def encode(array):
     retval, buffer = cv2.imencode('.png', array)
@@ -121,13 +115,7 @@ frame = 1
 
 for rgb_frame in video:
     
-    # Grab red channel  
-    # red = rgb_frame[:,:,0]    
-    # Look for red cars :)
-    # 
     
-    # Look for road :)
-    # 
     car_mask,road_mask = segment_image(rgb_frame)
     binary_car_result = car_mask*1
     binary_road_result = road_mask*1
