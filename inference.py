@@ -27,6 +27,7 @@ from mrcnn import utils
 import mrcnn.model as modellib
 from mrcnn import visualize
 from mrcnn.model import log
+from moviepy.editor import VideoFileClip
 
 
 
@@ -165,21 +166,11 @@ for rgb_frame in video:
     except KeyboardInterrupt as e:
         break
 
-# video_len = video.shape[0]
-# offset=1
-# a = time.time()
-# for idx in range(0,video_len,4):
-#     # if video_len-idx >4:
-#     #     offset = 4
-#     # else: 
-#     #     offset = video_len-idx
-#     # model.config.IMAGES_PER_GPU = offset
-#     rgb_frames = video[idx:idx+offset,:,:,:]
-#     print(rgb_frames.shape)
-#     final_img = segment_images_batch(rgb_frames)
-# b=time.time()
-# _secs = (b-a)%60
+def process_video(INPUT_FILE,OUTPUT_FILE):
+    video = VideoFileClip(INPUT_FILE)
+    processed_video = video.fl_image(segment_images)
+    processed_video.write_videofile(OUTPUT_FILE, audio=False)
 
-# print("FPS:",video_len/_secs)
+process_video('./test_video.mp4','./output_video.mp4')
 
 exit()
