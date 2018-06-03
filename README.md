@@ -13,6 +13,17 @@ The [lyft Perception challenge](https://www.udacity.com/lyft-challenge) in assoc
 ## Approach
 Although it was a segmentation problem and did not require instance segmentation, I went ahead with [MASK-RCNN](https://arxiv.org/pdf/1703.06870.pdf) as it was the state of the art algorithm in image segmentation and I was always intrigued to learn about it. Also I started on *28th*, just after finishing my first term, so transfer learning was my only shot. :sweat:
 
+
+*Click to Watch on youtube*
+
+
+<div style="text-align:center;">
+	<a href=https://www.youtube.com/watch?v=Q56fzNjmYKc>
+		<img src=./assets/final.gif width="640" height="480" >
+	</a>
+</div>
+
+
 #### Mask-RCNN (A brief overview)
 
 Mask-RCNN, also known as [Detectron](https://github.com/facebookresearch/Detectron) is a research platform for object detection developed by facebookresearch. It is mainly a modification of Faster RCNN with a segmentation branch parallel to class predictor and bounding box regressor. The vanilla ResNet is used in an FPN setting as a backbone to Faster RCNN so that features can be extracted at multiple levels of the feature pyramid
