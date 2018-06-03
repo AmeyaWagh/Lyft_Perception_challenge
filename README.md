@@ -75,7 +75,7 @@ class LyftChallengeConfig(Config):
     to the toy shapes dataset.
     """
     # Give the configuration a recognizable name
-    NAME = "shapes"
+    NAME = "road_car_segmenter"
 
     # Backbone network architecture
     # Supported values are: resnet50, resnet101
@@ -178,16 +178,6 @@ model.train(dataset_train, dataset_val,
             layers="heads_mask")
 ```
 
-## Results
-
-```
-Your program runs at 1.703 FPS
-
-Car F score: 0.519 | Car Precision: 0.509 | Car Recall: 0.521 | Road F score: 0.961 | Road Precision: 0.970 | Road Recall: 0.926 | Averaged F score: 0.740
-```
-
-I also observed that the class frequency was imbalanced and there were fewer number of samples with cars than roads. This could have been solved by weighing the loss function but faced dimension issues while implementing it
-
 
 ## Inference and Submission
 
@@ -195,7 +185,7 @@ I also observed that the class frequency was imbalanced and there were fewer num
 The inference configuration uses a batch size of only one image. To improve the FPS, a batch of image was taken from the video and was passed to the pipeline but this did not improve the FPS drastically and rather increased the complexity as the test video had odd number of frames.
 
 ```python
-class InferenceConfig(ShapesConfig):
+class InferenceConfig(LyftChallengeConfig):
     GPU_COUNT = 1
     IMAGES_PER_GPU = 1
 ```
@@ -208,6 +198,57 @@ def encode(array):
     return base64.b64encode(buffer).decode("utf-8")
 ```
 
+## Results
+
+```
+Your program runs at 1.703 FPS
+
+Car F score: 0.519 | Car Precision: 0.509 | Car Recall: 0.521 | Road F score: 0.961 | Road Precision: 0.970 | Road Recall: 0.926 | Averaged F score: 0.740
+```
+
+The above score was just obtained by the dataset provided.I observed that the class frequency was imbalanced and there were fewer number of samples with cars than roads. This could have been solved by weighing the loss function according to classes but I faced dimension issues while implementing it. The other approach would be to generate more data using Carla simulator or using popular datasets such as Cityscape.
+
+The loss function for masks is given as
+
+```python
+def mrcnn_mask_loss_graph(target_masks, target_class_ids, pred_masks):
+    """Mask binary cross-entropy loss for the masks head.
+
+    target_masks: [batch, num_rois, height, width].
+        A float32 tensor of values 0 or 1. Uses zero padding to fill array.
+    target_class_ids: [batch, num_rois]. Integer class IDs. Zero padded.
+    pred_masks: [batch, proposals, height, width, num_classes] float32 tensor
+                with values from 0 to 1.
+    """
+    # Reshape for simplicity. Merge first two dimensions into one.
+    target_class_ids = K.reshape(target_class_ids, (-1,))
+    mask_shape = tf.shape(target_masks)
+    target_masks = K.reshape(target_masks, (-1, mask_shape[2], mask_shape[3]))
+    pred_shape = tf.shape(pred_masks)
+    pred_masks = K.reshape(pred_masks,
+                           (-1, pred_shape[2], pred_shape[3], pred_shape[4]))
+    # Permute predicted masks to [N, num_classes, height, width]
+    pred_masks = tf.transpose(pred_masks, [0, 3, 1, 2])
+
+    # Only positive ROIs contribute to the loss. And only
+    # the class specific mask of each ROI.
+    positive_ix = tf.where(target_class_ids > 0)[:, 0]
+    positive_class_ids = tf.cast(
+        tf.gather(target_class_ids, positive_ix), tf.int64)
+    indices = tf.stack([positive_ix, positive_class_ids], axis=1)
+
+    # Gather the masks (predicted and true) that contribute to loss
+    y_true = tf.gather(target_masks, positive_ix)
+    y_pred = tf.gather_nd(pred_masks, indices)
+
+    # Compute binary cross entropy. If no positive ROIs, then return 0.
+    # shape: [batch, roi, num_classes]
+    loss = K.switch(tf.size(y_true) > 0,
+                    K.binary_crossentropy(target=y_true, output=y_pred),
+                    tf.constant(0.0))
+    loss = K.mean(loss)
+    return loss
+```
 
 ## Code Execution
 - training on CARLA dataset
