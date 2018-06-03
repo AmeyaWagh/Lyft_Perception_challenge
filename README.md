@@ -45,6 +45,9 @@ The model description after compiliation can be found at [model](./assets/model.
 
 ## Training
 
+The trained weights can be downloaded from [weights](https://drive.google.com/open?id=1UeRD_MvBg7XKsKlysZAdvV6jr9oFRFWU)
+The model was trained on Alienware 13R3 with Nvidia-GTX-1060
+
 #### Pre-processing Data
 The CARLA datset provided contains train and test images in png format where the masks are in the RED channel of the ground truth mask. 
 ```python
